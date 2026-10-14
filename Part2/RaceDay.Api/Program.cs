@@ -12,6 +12,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddDbContext<RaceDayDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("RaceDayDb")));
 
+builder.Services.AddScoped<RaceDay.Api.Services.IPasswordService, RaceDay.Api.Services.PasswordService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
