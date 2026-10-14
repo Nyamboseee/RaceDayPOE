@@ -21,7 +21,15 @@ public class PasswordService : IPasswordService
 
     public bool Verify(string hashedPassword, string providedPassword)
     {
-        var result = _hasher.VerifyHashedPassword(new object(), hashedPassword, providedPassword);
-        return result != PasswordVerificationResult.Failed;
+        try
+        {
+            var result = _hasher.VerifyHashedPassword(new object(), hashedPassword, providedPassword);
+            return result != PasswordVerificationResult.Failed;
+        }
+        catch (FormatException)
+        {
+            // Not a real hash (e.g. the seed accounts), so nobody can log in with it
+            return false;
+        }
     }
 }
