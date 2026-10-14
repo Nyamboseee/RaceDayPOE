@@ -1,3 +1,4 @@
+using RaceDay.Api.Auth;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using RaceDay.Api.Data;
@@ -34,6 +35,10 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             return Task.CompletedTask;
         };
     });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.OrganizerOnly, policy => policy.RequireRole(Roles.Organizer))
+    .AddPolicy(Policies.ParticipantOnly, policy => policy.RequireRole(Roles.Participant));
 
 var app = builder.Build();
 
