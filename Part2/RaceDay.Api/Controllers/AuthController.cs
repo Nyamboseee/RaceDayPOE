@@ -24,7 +24,15 @@ public class AuthController : ControllerBase
         _passwords = passwords;
     }
 
+    /// <summary>Registers a new Organizer or Participant account.</summary>
+    /// <remarks>The role field decides which account type is created. The password is hashed before it is stored.</remarks>
+    /// <response code="201">Account created. Returns the new id, role and email.</response>
+    /// <response code="400">Validation failed, for example an unknown role or a password shorter than 8 characters.</response>
+    /// <response code="409">An account with this email already exists.</response>
     [HttpPost("register")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
         var role = request.Role.Trim().ToLower();
@@ -79,7 +87,13 @@ public class AuthController : ControllerBase
             new { id = organizer.OrganizerId, role = "Organizer", email });
     }
 
+    /// <summary>Logs a user in and starts a cookie session.</summary>
+    /// <remarks>The session cookie carries the user's id and role for every later request.</remarks>
+    /// <response code="200">Logged in. Returns the id, name, email and role.</response>
+    /// <response code="401">Invalid email or password.</response>
     [HttpPost("login")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var email = request.Email.Trim().ToLower();
@@ -131,16 +145,26 @@ public class AuthController : ControllerBase
         return Ok(new { id, name, email, role });
     }
 
+    /// <summary>Ends the current session.</summary>
+    /// <response code="204">Logged out.</response>
+    /// <response code="401">Not logged in.</response>
     [HttpPost("logout")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout()
     {
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return NoContent();
     }
 
+    /// <summary>Returns who the current session belongs to.</summary>
+    /// <response code="200">The logged-in user's id, name, email and role.</response>
+    /// <response code="401">Not logged in.</response>
     [HttpGet("me")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public IActionResult Me()
     {
         return Ok(new
