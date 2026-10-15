@@ -24,9 +24,14 @@ public class EventsController : ControllerBase
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // Both roles can view events, so this only needs a login
+    /// <summary>Lists all events, soonest first.</summary>
+    /// <remarks>Both Organizers and Participants can view events, so this only needs a login.</remarks>
+    /// <response code="200">The list of events.</response>
+    /// <response code="401">Not logged in.</response>
     [HttpGet]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetEvents()
     {
         var events = await _db.Events
@@ -47,8 +52,15 @@ public class EventsController : ControllerBase
         return Ok(events);
     }
 
+    /// <summary>Returns one event by its id.</summary>
+    /// <response code="200">The event details.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="404">No event with that id.</response>
     [HttpGet("{id:int}")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetEvent(int id)
     {
         var e = await _db.Events.FindAsync(id);
@@ -67,8 +79,18 @@ public class EventsController : ControllerBase
         });
     }
 
+    /// <summary>Creates a new event owned by the logged-in Organizer.</summary>
+    /// <remarks>Organizer only. EventType must be Run, Walk or Cycle.</remarks>
+    /// <response code="201">Event created. Returns its id and name.</response>
+    /// <response code="400">Validation failed, for example an unknown event type.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Logged in as a Participant.</response>
     [HttpPost]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateEvent(EventRequest request)
     {
         var type = ValidTypes.FirstOrDefault(t =>
@@ -96,8 +118,20 @@ public class EventsController : ControllerBase
             new { id = newEvent.EventId, name = newEvent.EventName });
     }
 
+    /// <summary>Updates an event.</summary>
+    /// <remarks>Organizer only, and only for events they created.</remarks>
+    /// <response code="200">Event updated.</response>
+    /// <response code="400">Validation failed, for example an unknown event type.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No event with that id.</response>
     [HttpPut("{id:int}")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateEvent(int id, EventRequest request)
     {
         var existing = await _db.Events.FindAsync(id);
@@ -124,8 +158,20 @@ public class EventsController : ControllerBase
         return Ok(new { id = existing.EventId, name = existing.EventName });
     }
 
+    /// <summary>Deletes an event.</summary>
+    /// <remarks>Organizer only, and only for events they created. Events that have categories or enrolments cannot be deleted.</remarks>
+    /// <response code="204">Event deleted.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No event with that id.</response>
+    /// <response code="409">The event still has categories or enrolments.</response>
     [HttpDelete("{id:int}")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteEvent(int id)
     {
         var existing = await _db.Events.FindAsync(id);

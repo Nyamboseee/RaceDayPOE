@@ -24,7 +24,15 @@ public class ProfileController : ControllerBase
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
     private bool IsOrganizer => User.IsInRole(Roles.Organizer);
 
+    /// <summary>Returns the profile of the logged-in user.</summary>
+    /// <remarks>Organizers and Participants hold different details, so the fields returned depend on the role.</remarks>
+    /// <response code="200">The user's own profile.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="404">The account no longer exists.</response>
     [HttpGet("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetMyProfile()
     {
         if (IsOrganizer)
@@ -58,7 +66,17 @@ public class ProfileController : ControllerBase
         });
     }
 
+    /// <summary>Updates the logged-in user's own profile.</summary>
+    /// <remarks>Organizers send fullName and phoneNumber. Participants send firstName, lastName, phoneNumber, gender and dateOfBirth. Email cannot be changed.</remarks>
+    /// <response code="200">The updated profile.</response>
+    /// <response code="400">A required name field is missing.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="404">The account no longer exists.</response>
     [HttpPut("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateMyProfile(UpdateProfileRequest request)
     {
         if (IsOrganizer)
