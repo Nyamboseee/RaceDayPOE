@@ -39,8 +39,22 @@ public class ResultsController : ControllerBase
         return null;
     }
 
+    /// <summary>Captures a finish time and position for an enrolment.</summary>
+    /// <remarks>Organizer only, and only for events they created. Status is Finished, DNF or DNS. A Finished result needs a finishTime (hh:mm:ss) and a position.</remarks>
+    /// <response code="201">Result captured.</response>
+    /// <response code="400">Invalid status, or a Finished result is missing its time or position.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No enrolment with that id.</response>
+    /// <response code="409">A result has already been captured for this enrolment.</response>
     [HttpPost("enrollments/{enrollmentId:int}/results")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CaptureResult(int enrollmentId, ResultRequest request)
     {
         var enrollment = await _db.Enrollments.Include(e => e.Event)
@@ -79,8 +93,20 @@ public class ResultsController : ControllerBase
         });
     }
 
+    /// <summary>Corrects a result that was captured earlier.</summary>
+    /// <remarks>Organizer only, and only for events they created.</remarks>
+    /// <response code="200">Result updated.</response>
+    /// <response code="400">Invalid status, or a Finished result is missing its time or position.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No result with that id.</response>
     [HttpPut("results/{id:int}")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateResult(int id, ResultRequest request)
     {
         var result = await _db.Results
@@ -107,9 +133,16 @@ public class ResultsController : ControllerBase
         });
     }
 
-    // A participant's own results
+    /// <summary>Lists the logged-in Participant's own results.</summary>
+    /// <remarks>Participant only. A participant only ever sees their own results.</remarks>
+    /// <response code="200">The participant's results, most recent event first.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Logged in as an Organizer.</response>
     [HttpGet("results/me")]
     [Authorize(Policy = Policies.ParticipantOnly)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetMyResults()
     {
         var mine = await _db.Results
@@ -131,9 +164,16 @@ public class ResultsController : ControllerBase
         return Ok(mine);
     }
 
-    // Everyone logged in can see an event's results
+    /// <summary>Lists the results of an event.</summary>
+    /// <remarks>Both roles can view an event's results. Finished runners come first, ordered by position.</remarks>
+    /// <response code="200">The results for the event.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="404">No event with that id.</response>
     [HttpGet("events/{eventId:int}/results")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetEventResults(int eventId)
     {
         if (!await _db.Events.AnyAsync(e => e.EventId == eventId))

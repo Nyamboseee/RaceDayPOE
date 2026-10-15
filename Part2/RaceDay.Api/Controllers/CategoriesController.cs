@@ -1,5 +1,4 @@
-﻿
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -23,9 +22,16 @@ public class CategoriesController : ControllerBase
 
     private int CurrentUserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    // Both roles can see the categories of an event
+    /// <summary>Lists the categories of an event.</summary>
+    /// <remarks>Both Organizers and Participants can view categories.</remarks>
+    /// <response code="200">The categories, shortest distance first.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="404">No event with that id.</response>
     [HttpGet("events/{eventId:int}/categories")]
     [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetCategories(int eventId)
     {
         if (!await _db.Events.AnyAsync(e => e.EventId == eventId))
@@ -50,8 +56,20 @@ public class CategoriesController : ControllerBase
         return Ok(categories);
     }
 
+    /// <summary>Adds a category to an event.</summary>
+    /// <remarks>Organizer only, and only for events they created. A category has a name, a distance and an optional age range.</remarks>
+    /// <response code="201">Category created.</response>
+    /// <response code="400">MinAge is greater than MaxAge.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No event with that id.</response>
     [HttpPost("events/{eventId:int}/categories")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateCategory(int eventId, CategoryRequest request)
     {
         var ev = await _db.Events.FindAsync(eventId);
@@ -81,8 +99,20 @@ public class CategoriesController : ControllerBase
             new { id = category.CategoryId, eventId, name = category.CategoryName });
     }
 
+    /// <summary>Updates a category.</summary>
+    /// <remarks>Organizer only, and only for categories under their own events.</remarks>
+    /// <response code="200">Category updated.</response>
+    /// <response code="400">MinAge is greater than MaxAge.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No category with that id.</response>
     [HttpPut("categories/{id:int}")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateCategory(int id, CategoryRequest request)
     {
         var category = await _db.Categories.Include(c => c.Event).FirstOrDefaultAsync(c => c.CategoryId == id);
@@ -104,8 +134,20 @@ public class CategoriesController : ControllerBase
         return Ok(new { id = category.CategoryId, name = category.CategoryName });
     }
 
+    /// <summary>Deletes a category.</summary>
+    /// <remarks>Organizer only. A category that already has enrolments cannot be deleted.</remarks>
+    /// <response code="204">Category deleted.</response>
+    /// <response code="401">Not logged in.</response>
+    /// <response code="403">Not an Organizer, or the event belongs to another Organizer.</response>
+    /// <response code="404">No category with that id.</response>
+    /// <response code="409">The category has enrolments.</response>
     [HttpDelete("categories/{id:int}")]
     [Authorize(Policy = Policies.OrganizerOnly)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var category = await _db.Categories.Include(c => c.Event).FirstOrDefaultAsync(c => c.CategoryId == id);
