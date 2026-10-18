@@ -69,7 +69,7 @@ them. The Part 1 plan had these public.
 A GitHub Actions workflow (`.github/workflows/part2-build-and-test.yml`) builds the solution
 and runs all unit tests on every push.
 
-!\[Green build](ci-screenshot-part2.png)
+<img src="ci-screenshot-part2.png" alt="Green build" width="800">
 
 ## Video walkthrough
 
