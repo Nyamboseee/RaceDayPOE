@@ -1,0 +1,46 @@
+# Starts the whole RaceDay platform: SQL Server, the API and the MVC web app.
+#   docker compose up --build
+# Web app: http://localhost:5100    API (Swagger): http://localhost:5012/swagger
+name: raceday
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-RaceDay2026Pass}
+    ports:
+      - "14330:1433"
+    volumes:
+      - raceday-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+  api:
+    build: ./RaceDay.Api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      InitDb: "true"
+      ConnectionStrings__RaceDayDb: "Server=db;Database=RaceDayDB;User Id=sa;Password=${SA_PASSWORD:-RaceDay2026Pass};TrustServerCertificate=True;"
+      AzureBlob__ConnectionString: "${AZURE_BLOB_CONNECTION_STRING:-}"
+    ports:
+      - "5012:8080"
+
+  web:
+    build: ./RaceDay.Web
+    depends_on:
+      - api
+    environment:
+      Api__BaseUrl: http://api:8080
+    ports:
+      - "5100:8080"
+
+volumes:
+  raceday-data:
