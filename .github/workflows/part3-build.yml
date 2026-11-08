@@ -1,0 +1,36 @@
+name: Part 3 - Build API, MVC and Docker
+
+# Builds the API and the MVC app, then makes sure the Docker images build too
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore packages
+        run: dotnet restore Part3/RaceDay.Part3.slnx
+
+      - name: Build API and MVC app
+        run: dotnet build Part3/RaceDay.Part3.slnx --no-restore --configuration Release
+
+  build-docker:
+    runs-on: ubuntu-latest
+    needs: build-dotnet
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build the Docker images
+        run: docker compose -f Part3/docker-compose.yml build
