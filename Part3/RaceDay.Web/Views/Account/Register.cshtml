@@ -1,0 +1,99 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Sign up";
+}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="auth-hero text-center mb-4">
+            <h1 class="rd-heading">Join RaceDay</h1>
+            <p class="text-muted">Pick your role. Organisers run events, participants enter them.</p>
+        </div>
+        <div class="card form-card">
+            <div class="card-body p-4">
+                <form asp-action="Register" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-2"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">I am a</label>
+                        <div class="btn-group role-toggle" role="group" aria-label="Role">
+                            <input type="radio" class="btn-check" name="Role" id="roleParticipant" value="Participant"
+                                   autocomplete="off" checked="@(Model.Role == "Participant")" />
+                            <label class="btn btn-outline-rd" for="roleParticipant">Participant</label>
+                            <input type="radio" class="btn-check" name="Role" id="roleOrganizer" value="Organizer"
+                                   autocomplete="off" checked="@(Model.Role == "Organizer")" />
+                            <label class="btn btn-outline-rd" for="roleOrganizer">Organiser</label>
+                        </div>
+                        <span asp-validation-for="Role" class="text-danger small d-block"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Email" class="form-label">Email</label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="Password" class="form-label">Password</label>
+                            <input asp-for="Password" class="form-control" type="password" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" type="password" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div id="participantFields" class="row g-3 mt-0">
+                        <div class="col-sm-6">
+                            <label asp-for="Gender" class="form-label"></label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Prefer not to say</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-6">
+                            <label asp-for="DateOfBirth" class="form-label"></label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-rd w-100 mt-4">Create account</button>
+                </form>
+            </div>
+        </div>
+        <p class="text-center mt-3">Already have an account? <a asp-action="Login">Log in</a></p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Gender and date of birth only apply to participants
+        const fields = document.getElementById('participantFields');
+        const radios = document.querySelectorAll('input[name="Role"]');
+        function sync() {
+            const role = document.querySelector('input[name="Role"]:checked').value;
+            fields.style.display = role === 'Participant' ? '' : 'none';
+        }
+        radios.forEach(r => r.addEventListener('change', sync));
+        sync();
+    </script>
+}
