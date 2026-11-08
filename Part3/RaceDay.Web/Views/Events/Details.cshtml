@@ -1,0 +1,79 @@
+@model EventDetailsViewModel
+@{
+    ViewData["Title"] = Model.Event.Name;
+    var isParticipant = User.IsInRole("Participant");
+}
+<div class="mb-3">
+    <a asp-controller="Home" asp-action="Index" class="text-muted small">&larr; Back</a>
+</div>
+
+<div class="event-hero mb-4">
+    @if (!string.IsNullOrEmpty(Model.Event.BannerUrl))
+    {
+        <img src="@Model.Event.BannerUrl" class="event-hero-img" alt="Banner for @Model.Event.Name" />
+    }
+    else
+    {
+        <div class="event-hero-img banner-placeholder type-@Model.Event.EventType.ToLower()"><span>@Model.Event.EventType</span></div>
+    }
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="event-date">@Model.Event.Date.ToString("dddd, d MMMM yyyy") &middot; @Model.Event.Date.ToString("HH:mm")</div>
+        <h1 class="rd-heading">@Model.Event.Name</h1>
+        <p class="text-muted">@Model.Event.Location</p>
+        <div class="mb-3">
+            <span class="chip">@Model.Event.EventType</span>
+            <span class="chip">@Model.Event.Distance.ToString("0.##") km</span>
+        </div>
+        <p>@(string.IsNullOrWhiteSpace(Model.Event.Description) ? "No description yet." : Model.Event.Description)</p>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card form-card">
+            <div class="card-body">
+                <h2 class="h5 rd-heading">Race categories</h2>
+                @if (Model.Categories.Count == 0)
+                {
+                    <p class="text-muted mb-0">The organiser has not added categories yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled category-list mb-0">
+                        @foreach (var c in Model.Categories)
+                        {
+                            <li class="category-item">
+                                <div>
+                                    <strong>@c.Name</strong>
+                                    <div class="text-muted small">
+                                        @c.Distance.ToString("0.##") km
+                                        @if (c.MinAge.HasValue || c.MaxAge.HasValue)
+                                        {
+                                            <text> &middot; ages @(c.MinAge?.ToString() ?? "any")&ndash;@(c.MaxAge?.ToString() ?? "any")</text>
+                                        }
+                                    </div>
+                                </div>
+                                @if (isParticipant)
+                                {
+                                    @if (Model.MyEnrollments.TryGetValue(c.Id, out var status))
+                                    {
+                                        <partial name="_StatusBadge" model="status" />
+                                    }
+                                    else
+                                    {
+                                        <form asp-action="Enrol" asp-controller="Events" method="post">
+                                            <input type="hidden" name="eventId" value="@Model.Event.Id" />
+                                            <input type="hidden" name="categoryId" value="@c.Id" />
+                                            <button type="submit" class="btn btn-rd btn-sm">Enrol</button>
+                                        </form>
+                                    }
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+</div>
