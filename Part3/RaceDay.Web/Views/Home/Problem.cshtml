@@ -1,0 +1,8 @@
+@{
+    ViewData["Title"] = ViewData["Title"] as string ?? "Something went wrong";
+}
+<div class="text-center py-5">
+    <h1 class="display-6 rd-heading">@ViewData["Title"]</h1>
+    <p class="lead text-muted">@ViewData["Message"]</p>
+    <a class="btn btn-rd mt-3" asp-controller="Home" asp-action="Index">Back to home</a>
+</div>
