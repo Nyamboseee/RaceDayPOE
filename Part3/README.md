@@ -111,7 +111,7 @@ access switched on so the browser can load the images.
 `.github/workflows/part3-build.yml` builds the API and the MVC app and then builds the Docker
 images on every push. The Part 2 workflow still runs the unit tests.
 
-![Green build](ci-screenshot-part3.png)
+<img src="ci-screenshot-part3.png" alt="Green build" width="800">
 
 ## Video walkthrough
 
