@@ -1,0 +1,101 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+    var isOrganizer = Model.Role == "Organizer";
+}
+<div class="page-head">
+    <h1 class="rd-heading">My profile</h1>
+</div>
+
+<div class="row g-4">
+    @if (!isOrganizer)
+    {
+        <div class="col-md-4">
+            <div class="card form-card text-center">
+                <div class="card-body">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePictureUrl))
+                    {
+                        <img src="@Model.ProfilePictureUrl" class="profile-pic" alt="Your profile picture" />
+                    }
+                    else
+                    {
+                        <div class="profile-pic profile-pic-empty">
+                            @(string.IsNullOrEmpty(Model.FirstName) ? "?" : Model.FirstName.Substring(0, 1).ToUpper())
+                        </div>
+                    }
+                    <form asp-action="Picture" method="post" enctype="multipart/form-data" class="mt-3">
+                        <input type="file" name="picture" class="form-control form-control-sm mb-2"
+                               accept="image/jpeg,image/png,image/webp" required />
+                        <button type="submit" class="btn btn-rd btn-sm w-100">Upload picture</button>
+                        <div class="form-text">JPG, PNG or WEBP, up to 5 MB.</div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="@(isOrganizer ? "col-md-8 col-lg-6" : "col-md-8")">
+        <div class="card form-card">
+            <div class="card-body p-4">
+                <form asp-action="Update" method="post" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" value="@Model.Email" disabled />
+                    </div>
+
+                    @if (isOrganizer)
+                    {
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label asp-for="FirstName" class="form-label"></label>
+                                <input asp-for="FirstName" class="form-control" />
+                                <span asp-validation-for="FirstName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="LastName" class="form-label"></label>
+                                <input asp-for="LastName" class="form-control" />
+                                <span asp-validation-for="LastName" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label asp-for="PhoneNumber" class="form-label"></label>
+                        <input asp-for="PhoneNumber" class="form-control" />
+                        <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                    </div>
+
+                    @if (!isOrganizer)
+                    {
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label asp-for="Gender" class="form-label"></label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">Prefer not to say</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-6">
+                                <label asp-for="DateOfBirth" class="form-label"></label>
+                                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                                <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    }
+
+                    <button type="submit" class="btn btn-rd">Save changes</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
