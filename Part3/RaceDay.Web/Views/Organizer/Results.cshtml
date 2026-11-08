@@ -1,0 +1,61 @@
+@model EventResultsViewModel
+@{
+    ViewData["Title"] = "Results";
+}
+<div class="mb-3"><a asp-action="Events" class="text-muted small">&larr; My events</a></div>
+<div class="page-head">
+    <h1 class="rd-heading">Capture results</h1>
+    <p class="text-muted mb-0">@Model.Event.Name &middot; @Model.Event.Date.ToString("d MMM yyyy")</p>
+</div>
+
+@if (Model.Enrollments.Count == 0)
+{
+    <div class="empty-state"><p class="text-muted mb-0">There is nobody to capture results for yet.</p></div>
+}
+else
+{
+    <p class="text-muted">Enter the finish time as <code>hh:mm:ss</code> and the finishing position. Saving a row publishes it to the participant straight away.</p>
+    <div class="table-responsive">
+        <table class="table rd-table align-middle">
+            <thead>
+                <tr><th>Bib</th><th>Participant</th><th>Category</th><th>Status</th><th>Finish time</th><th>Position</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.Enrollments)
+                {
+                    var status = e.ResultStatus ?? "Finished";
+                    <tr>
+                        <td>
+                            <form id="rf-@e.Id" asp-action="SaveResult" method="post">
+                                <input type="hidden" name="EventId" value="@Model.Event.Id" />
+                                <input type="hidden" name="EnrollmentId" value="@e.Id" />
+                                <input type="hidden" name="ResultId" value="@e.ResultId" />
+                            </form>
+                            <code>@e.BibNumber</code>
+                        </td>
+                        <td>@e.ParticipantName</td>
+                        <td>@e.CategoryName</td>
+                        <td>
+                            <select name="Status" form="rf-@e.Id" class="form-select form-select-sm">
+                                <option value="Finished" selected="@(status == "Finished")">Finished</option>
+                                <option value="DNF" selected="@(status == "DNF")">DNF</option>
+                                <option value="DNS" selected="@(status == "DNS")">DNS</option>
+                            </select>
+                        </td>
+                        <td>
+                            <input name="FinishTime" form="rf-@e.Id" class="form-control form-control-sm" placeholder="00:00:00"
+                                   value="@(e.FinishTime.HasValue ? e.FinishTime.Value.ToString(@"hh\:mm\:ss") : "")" />
+                        </td>
+                        <td>
+                            <input name="Position" form="rf-@e.Id" type="number" min="1" class="form-control form-control-sm"
+                                   value="@e.Position" />
+                        </td>
+                        <td class="text-end">
+                            <button type="submit" form="rf-@e.Id" class="btn btn-rd btn-sm">@(e.ResultId.HasValue ? "Update" : "Save")</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

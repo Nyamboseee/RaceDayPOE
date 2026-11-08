@@ -1,0 +1,80 @@
+@model CategoriesViewModel
+@{
+    ViewData["Title"] = "Categories";
+}
+<div class="mb-3"><a asp-action="Events" class="text-muted small">&larr; My events</a></div>
+<div class="page-head">
+    <h1 class="rd-heading">Categories</h1>
+    <p class="text-muted mb-0">@Model.Event.Name &middot; @Model.Event.Date.ToString("d MMM yyyy")</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        @if (Model.Categories.Count == 0)
+        {
+            <div class="empty-state"><p class="text-muted mb-0">No categories yet. Add the first one.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table rd-table align-middle">
+                    <thead><tr><th>Name</th><th>Distance</th><th>Ages</th><th></th></tr></thead>
+                    <tbody>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <tr>
+                                <td>@c.Name</td>
+                                <td>@c.Distance.ToString("0.##") km</td>
+                                <td>@(c.MinAge?.ToString() ?? "any")&ndash;@(c.MaxAge?.ToString() ?? "any")</td>
+                                <td class="text-end">
+                                    <a class="btn btn-outline-dark btn-sm" asp-action="EditCategory"
+                                       asp-route-eventId="@Model.Event.Id" asp-route-id="@c.Id">Edit</a>
+                                    <form asp-action="DeleteCategory" method="post" class="d-inline"
+                                          onsubmit="return confirm('Delete this category?');">
+                                        <input type="hidden" name="eventId" value="@Model.Event.Id" />
+                                        <input type="hidden" name="id" value="@c.Id" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card form-card">
+            <div class="card-body">
+                <h2 class="h5 rd-heading">Add a category</h2>
+                <form asp-action="AddCategory" method="post" novalidate>
+                    <input type="hidden" asp-for="Form.EventId" />
+                    <div class="mb-3">
+                        <label asp-for="Form.CategoryName" class="form-label"></label>
+                        <input asp-for="Form.CategoryName" class="form-control" placeholder="e.g. 10km Fun Run" />
+                        <span asp-validation-for="Form.CategoryName" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Form.Distance" class="form-label"></label>
+                        <input asp-for="Form.Distance" class="form-control" type="number" step="0.1" min="0.1" />
+                        <span asp-validation-for="Form.Distance" class="text-danger small"></span>
+                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-6">
+                            <label asp-for="Form.MinAge" class="form-label"></label>
+                            <input asp-for="Form.MinAge" class="form-control" type="number" min="0" max="120" />
+                            <span asp-validation-for="Form.MinAge" class="text-danger small"></span>
+                        </div>
+                        <div class="col-6">
+                            <label asp-for="Form.MaxAge" class="form-label"></label>
+                            <input asp-for="Form.MaxAge" class="form-control" type="number" min="0" max="120" />
+                            <span asp-validation-for="Form.MaxAge" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-rd">Add category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

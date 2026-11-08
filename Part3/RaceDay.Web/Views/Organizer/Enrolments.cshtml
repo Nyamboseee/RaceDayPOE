@@ -1,0 +1,52 @@
+@model EventEnrollmentsViewModel
+@{
+    ViewData["Title"] = "Enrolments";
+}
+<div class="mb-3"><a asp-action="Events" class="text-muted small">&larr; My events</a></div>
+<div class="page-head">
+    <h1 class="rd-heading">Enrolments</h1>
+    <p class="text-muted mb-0">@Model.Event.Name &middot; @Model.Enrollments.Count enrolled</p>
+</div>
+
+@if (Model.Enrollments.Count == 0)
+{
+    <div class="empty-state"><p class="text-muted mb-0">Nobody has enrolled yet.</p></div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table rd-table align-middle">
+            <thead>
+                <tr><th>Bib</th><th>Participant</th><th>Category</th><th>Enrolled</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.Enrollments)
+                {
+                    <tr>
+                        <td><code>@e.BibNumber</code></td>
+                        <td>@e.ParticipantName</td>
+                        <td>@e.CategoryName</td>
+                        <td>@e.EnrolledOn.ToString("d MMM yyyy")</td>
+                        <td><partial name="_StatusBadge" model="e.Status" /></td>
+                        <td class="text-end">
+                            <form asp-action="SetEnrolmentStatus" method="post" class="d-inline">
+                                <input type="hidden" name="eventId" value="@Model.Event.Id" />
+                                <input type="hidden" name="id" value="@e.Id" />
+                                @if (e.Status == "Confirmed")
+                                {
+                                    <input type="hidden" name="status" value="Pending" />
+                                    <button type="submit" class="btn btn-outline-dark btn-sm">Mark pending</button>
+                                }
+                                else
+                                {
+                                    <input type="hidden" name="status" value="Confirmed" />
+                                    <button type="submit" class="btn btn-rd btn-sm">Confirm</button>
+                                }
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
