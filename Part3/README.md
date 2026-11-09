@@ -115,7 +115,8 @@ images on every push. The Part 2 workflow still runs the unit tests.
 
 ## Video walkthrough
 
-[PASTE YOUR UNLISTED YOUTUBE LINK HERE]
+
+https://youtu.be/Nugqb1D1Prg
 
 ## AI tool disclosure
 
